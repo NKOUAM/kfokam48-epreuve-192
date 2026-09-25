@@ -27,17 +27,19 @@ public class ExerciceService {
     private final ExerciceRepository exerciceRepository;
     private final SessionRepository sessionRepository;
     private final EtudiantRepository etudiantRepository;
+    private final AssignationRelecteurService assignationRelecteurService;
 
     public ExerciceService(ExerciceRepository exerciceRepository,
                            SessionRepository sessionRepository,
-                           EtudiantRepository etudiantRepository) {
+                           EtudiantRepository etudiantRepository,
+                           AssignationRelecteurService assignationRelecteurService) {
         this.exerciceRepository = exerciceRepository;
         this.sessionRepository = sessionRepository;
         this.etudiantRepository = etudiantRepository;
+        this.assignationRelecteurService = assignationRelecteurService;
     }
 
     public ExerciceResponse deposer(DeposerExerciceRequest request) {
-        // Validation du lien
         if (!estUrlValide(request.lien())) {
             throw new LienInvalideException();
         }
@@ -48,12 +50,10 @@ public class ExerciceService {
         Etudiant etudiant = etudiantRepository.findById(request.etudiantId())
                 .orElseThrow(() -> new RessourceInconnueException("Étudiant inconnu."));
 
-        // RG11 : dépôt possible jusqu'à clôture seulement
         if (session.isCloturee()) {
             throw new SessionClotureeException();
         }
 
-        // EF6 : un seul exercice par (session, étudiant)
         if (exerciceRepository.existsBySessionIdAndEtudiantId(session.getId(), etudiant.getId())) {
             throw new ExerciceDejaDeposeException();
         }
@@ -67,7 +67,10 @@ public class ExerciceService {
 
         Exercice saved = exerciceRepository.save(exercice);
 
-        return new ExerciceResponse(saved.getId(), saved.getStatut().name());
+        assignationRelecteurService.tenterAssignation(saved);
+        Exercice finalEx = exerciceRepository.findById(saved.getId()).orElse(saved);
+
+        return new ExerciceResponse(finalEx.getId(), finalEx.getStatut().name());
     }
 
     private boolean estUrlValide(String lien) {
