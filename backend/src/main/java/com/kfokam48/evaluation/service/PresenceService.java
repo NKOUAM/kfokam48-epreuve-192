@@ -27,49 +27,45 @@ public class PresenceService {
     private final SessionRepository sessionRepository;
     private final EtudiantRepository etudiantRepository;
     private final TentativeCodeTracker tentativeTracker;
+    private final AssignationRelecteurService assignationRelecteurService;
 
     public PresenceService(PresenceRepository presenceRepository,
                            SessionRepository sessionRepository,
                            EtudiantRepository etudiantRepository,
-                           TentativeCodeTracker tentativeTracker) {
+                           TentativeCodeTracker tentativeTracker,
+                           AssignationRelecteurService assignationRelecteurService) {
         this.presenceRepository = presenceRepository;
         this.sessionRepository = sessionRepository;
         this.etudiantRepository = etudiantRepository;
         this.tentativeTracker = tentativeTracker;
+        this.assignationRelecteurService = assignationRelecteurService;
     }
 
     public PresenceResponse marquer(MarquerPresenceRequest request) {
-        // RG3 : vérifier que l'étudiant n'est pas bloqué
         tentativeTracker.verifierNonBloque(request.etudiantId());
 
-        // Rechercher la session par code
         Session session = sessionRepository.findByCode(request.code())
                 .orElseGet(() -> {
                     tentativeTracker.enregistrerEchec(request.etudiantId());
                     throw new CodeInconnuException();
                 });
 
-        // RG1 : expiration du code
         if (session.getExpirationAt().isBefore(LocalDateTime.now())) {
             tentativeTracker.reinitialiser(request.etudiantId());
             throw new CodeExpireException();
         }
 
-        // RG2 / clôture : plus de présence après clôture
         if (session.isCloturee()) {
             throw new SessionClotureeException();
         }
 
-        // Étudiant existant ?
         Etudiant etudiant = etudiantRepository.findById(request.etudiantId())
                 .orElseThrow(() -> new RessourceInconnueException("Étudiant inconnu."));
 
-        // EF4 : une seule présence par (session, étudiant)
         if (presenceRepository.existsBySessionIdAndEtudiantId(session.getId(), etudiant.getId())) {
             throw new DejaPresentException();
         }
 
-        // Création de la présence
         Presence presence = Presence.builder()
                 .session(session)
                 .etudiant(etudiant)
@@ -79,6 +75,8 @@ public class PresenceService {
 
         Presence saved = presenceRepository.save(presence);
         tentativeTracker.reinitialiser(etudiant.getId());
+
+        assignationRelecteurService.tenterAssignationsEnAttente(session.getId());
 
         return new PresenceResponse(
                 saved.getId(),
