@@ -20,7 +20,12 @@ public class SessionController {
 
     @PostMapping
     public ResponseEntity<SessionResponse> ouvrir(@Valid @RequestBody OuvrirSessionRequest request) {
-        SessionResponse response = sessionService.ouvrir(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(sessionService.ouvrir(request));
+    }
+
+    @PostMapping("/{id}/cloture")
+    public ResponseEntity<Void> cloturer(@PathVariable Long id) {
+        sessionService.cloturer(id);
+        return ResponseEntity.ok().build();
     }
 }
