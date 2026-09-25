@@ -7,5 +7,5 @@ import java.util.List;
 public interface PresenceRepository extends JpaRepository<Presence, Long> {
     boolean existsBySessionIdAndEtudiantId(Long sessionId, Long etudiantId);
     List<Presence> findBySessionId(Long sessionId);
-    List<Presence> findBySessionIdAndEtudiantIdNot(Long sessionId, Long etudiantId);
+    long countByEtudiantId(Long etudiantId);
 }
