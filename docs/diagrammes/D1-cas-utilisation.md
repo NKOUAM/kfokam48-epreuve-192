@@ -42,8 +42,3 @@ graph LR
     R --> UC12
 
     S --> UC13
-```
-
-**Notes :**
-- `Relecteur` est un **rôle** porté par un étudiant (pas une entité à part — voir D2).
-- `Système` assigne automatiquement un relecteur à chaque exercice déposé (Q7, EF7).

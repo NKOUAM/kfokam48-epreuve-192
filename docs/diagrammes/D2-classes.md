@@ -1,13 +1,8 @@
-# D2 — Diagramme de classes (modèle de données)
-
-Correspond aux migrations Flyway `V1__init_schema.sql` (voir `backend/src/main/resources/db/migration/`).
-
-```mermaid
 classDiagram
-    class Promotion {
-        +Long id
-        +String nom
-    }
+class Promotion {
++Long id
++String nom
+}
 
     class Etudiant {
         +Long id
@@ -58,25 +53,6 @@ classDiagram
         +LocalDateTime updatedAt
     }
 
-    class SourcePresence {
-        <<enumeration>>
-        ETUDIANT
-        FORMATEUR
-    }
-
-    class StatutExercice {
-        <<enumeration>>
-        DEPOSE
-        EN_ATTENTE_RELECTURE
-        RELU
-    }
-
-    class StatutRelecture {
-        <<enumeration>>
-        EN_ATTENTE
-        RENDUE
-    }
-
     Promotion "1" --> "*" Etudiant : regroupe
     Promotion "1" --> "*" Session : programme
     Formateur "1" --> "*" Session : ouvre
@@ -86,11 +62,3 @@ classDiagram
     Etudiant "1" --> "*" Exercice : dépose
     Exercice "1" --> "0..1" Relecture : fait l'objet de
     Etudiant "1" --> "*" Relecture : rédige
-```
-
-**Contraintes d'unicité (posées en V1) :**
-- `UNIQUE(session_id, etudiant_id)` sur `presence` — RG « déjà présent » (409)
-- `UNIQUE(session_id, etudiant_id)` sur `exercice` — RG « exercice déjà déposé » (409)
-- `UNIQUE(exercice_id)` sur `relecture` — RG5 « un seul relecteur »
-
-**Cardinalité notable :** `Exercice "1" --> "0..1" Relecture` — un exercice peut exister **sans** relecture (statut `DEPOSE`, cas Q7 × Q12, voir CDC section 7).

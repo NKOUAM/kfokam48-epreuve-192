@@ -1,14 +1,9 @@
-# D3 — Séquence : marquer sa présence
-
-Cas nominal + deux cas d'erreur (RG1 : code expiré, RG « déjà présent »). Correspond aux codes HTTP du contrat.
-
-```mermaid
 sequenceDiagram
-    participant E as Étudiant
-    participant F as Front (Angular)
-    participant API as PresenceController
-    participant S as PresenceService
-    participant R as PresenceRepository
+participant E as Étudiant
+participant F as Front (Angular)
+participant API as PresenceController
+participant S as PresenceService
+participant R as PresenceRepository
 
     E->>F: saisit le code
     F->>API: POST /api/presences { code, etudiantId }
@@ -37,6 +32,3 @@ sequenceDiagram
         S-->>API: Presence
         API-->>F: 201 { id, sessionId, etudiantId, source: "ETUDIANT" }
     end
-```
-
-**Cas d'erreur couverts :** code inconnu, code expiré (RG1), déjà présent.
