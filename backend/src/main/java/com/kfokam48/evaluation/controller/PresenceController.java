@@ -1,5 +1,6 @@
 package com.kfokam48.evaluation.controller;
 
+import com.kfokam48.evaluation.dto.request.AjouterPresenceFormateurRequest;
 import com.kfokam48.evaluation.dto.request.MarquerPresenceRequest;
 import com.kfokam48.evaluation.dto.response.PresenceResponse;
 import com.kfokam48.evaluation.service.PresenceService;
@@ -20,7 +21,14 @@ public class PresenceController {
 
     @PostMapping
     public ResponseEntity<PresenceResponse> marquer(@Valid @RequestBody MarquerPresenceRequest request) {
-        PresenceResponse response = presenceService.marquer(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(presenceService.marquer(request));
+    }
+
+    @PostMapping("/formateur")
+    public ResponseEntity<PresenceResponse> ajouterFormateur(
+            @Valid @RequestBody AjouterPresenceFormateurRequest request) {
+        PresenceResponse response = presenceService.ajouterParFormateur(
+                request.sessionId(), request.etudiantId());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }
