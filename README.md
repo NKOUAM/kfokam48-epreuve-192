@@ -1,5 +1,3 @@
-
-Épreuve finale fullstack KFOKAM48 — matricule **192**.
 # kfokam48-epreuve-192
 
 Épreuve finale fullstack KFOKAM48 — matricule **192**.
@@ -12,6 +10,10 @@
 - `frontend/` — Angular
 - `docker/`   — Dockerfiles et configuration
 
+## Frontend choisi
+
+**Angular**, parce que le framework impose une architecture MVC claire (services, composants, guards) qui correspond exactement à la contrainte F3 du sujet.
+
 ## Statut
 
 - [ ] Étape 1 — Analyse et conception
@@ -22,6 +24,3 @@
 - [ ] Étape 6 — Soumission
 
 *Documentation d'installation à venir (étape 4).*
-
-
-

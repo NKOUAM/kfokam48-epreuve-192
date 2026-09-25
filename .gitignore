@@ -56,7 +56,7 @@ testem.log
 .env.*
 !.env.example
 *.local
-
+.codeartsdoer/
 # =====================
 # OS
 # =====================
@@ -68,3 +68,5 @@ Thumbs.db
 # =====================
 *.log
 logs/
+# IDE local
+.codeartsdoer/
