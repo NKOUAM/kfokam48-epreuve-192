@@ -7,6 +7,8 @@ import com.kfokam48.evaluation.dto.request.OuvrirSessionRequest;
 import com.kfokam48.evaluation.dto.response.SessionResponse;
 import com.kfokam48.evaluation.exception.PromotionInconnueException;
 import com.kfokam48.evaluation.exception.RessourceInconnueException;
+import com.kfokam48.evaluation.exception.SessionClotureeException;
+import com.kfokam48.evaluation.exception.SessionInconnueException;
 import com.kfokam48.evaluation.repository.FormateurRepository;
 import com.kfokam48.evaluation.repository.PromotionRepository;
 import com.kfokam48.evaluation.repository.SessionRepository;
@@ -39,30 +41,28 @@ public class SessionService {
     public SessionResponse ouvrir(OuvrirSessionRequest request) {
         Promotion promotion = promotionRepository.findById(request.promotionId())
                 .orElseThrow(PromotionInconnueException::new);
-
         Formateur formateur = formateurRepository.findAll().stream()
                 .findFirst()
                 .orElseThrow(() -> new RessourceInconnueException("Aucun formateur enregistré."));
-
         LocalDateTime maintenant = LocalDateTime.now();
-
         Session session = Session.builder()
-                .titre(request.titre())
-                .code(genererCode())
+                .titre(request.titre()).code(genererCode())
                 .ouvertureAt(maintenant)
                 .expirationAt(maintenant.plusMinutes(EXPIRATION_MINUTES))
-                .promotion(promotion)
-                .formateur(formateur)
-                .build();
-
+                .promotion(promotion).formateur(formateur).build();
         Session saved = sessionRepository.save(session);
+        return new SessionResponse(saved.getId(), saved.getCode(),
+                saved.getOuvertureAt(), saved.getExpirationAt());
+    }
 
-        return new SessionResponse(
-                saved.getId(),
-                saved.getCode(),
-                saved.getOuvertureAt(),
-                saved.getExpirationAt()
-        );
+    public void cloturer(Long sessionId) {
+        Session session = sessionRepository.findById(sessionId)
+                .orElseThrow(SessionInconnueException::new);
+        if (session.isCloturee()) {
+            throw new SessionClotureeException();
+        }
+        session.setClotureeAt(LocalDateTime.now());
+        sessionRepository.save(session);
     }
 
     private String genererCode() {
