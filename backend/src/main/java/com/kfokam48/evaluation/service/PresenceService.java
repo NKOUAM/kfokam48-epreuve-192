@@ -15,6 +15,7 @@ import com.kfokam48.evaluation.exception.SessionInconnueException;
 import com.kfokam48.evaluation.repository.EtudiantRepository;
 import com.kfokam48.evaluation.repository.PresenceRepository;
 import com.kfokam48.evaluation.repository.SessionRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -64,7 +65,12 @@ public class PresenceService {
         Presence presence = Presence.builder()
                 .session(session).etudiant(etudiant)
                 .source(SourcePresence.ETUDIANT).createdAt(LocalDateTime.now()).build();
-        Presence saved = presenceRepository.save(presence);
+        Presence saved;
+        try {
+            saved = presenceRepository.saveAndFlush(presence);
+        } catch (DataIntegrityViolationException ex) {
+            throw new DejaPresentException();
+        }
         tentativeTracker.reinitialiser(etudiant.getId());
         assignationRelecteurService.tenterAssignationsEnAttente(session.getId());
         return new PresenceResponse(saved.getId(), session.getId(), etudiant.getId(), saved.getSource().name());
@@ -81,7 +87,12 @@ public class PresenceService {
         Presence presence = Presence.builder()
                 .session(session).etudiant(etudiant)
                 .source(SourcePresence.FORMATEUR).createdAt(LocalDateTime.now()).build();
-        Presence saved = presenceRepository.save(presence);
+        Presence saved;
+        try {
+            saved = presenceRepository.saveAndFlush(presence);
+        } catch (DataIntegrityViolationException ex) {
+            throw new DejaPresentException();
+        }
         assignationRelecteurService.tenterAssignationsEnAttente(sessionId);
         return new PresenceResponse(saved.getId(), sessionId, etudiantId, saved.getSource().name());
     }
