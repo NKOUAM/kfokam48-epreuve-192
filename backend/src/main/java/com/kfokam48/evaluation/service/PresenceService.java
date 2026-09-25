@@ -11,6 +11,7 @@ import com.kfokam48.evaluation.exception.CodeInconnuException;
 import com.kfokam48.evaluation.exception.DejaPresentException;
 import com.kfokam48.evaluation.exception.RessourceInconnueException;
 import com.kfokam48.evaluation.exception.SessionClotureeException;
+import com.kfokam48.evaluation.exception.SessionInconnueException;
 import com.kfokam48.evaluation.repository.EtudiantRepository;
 import com.kfokam48.evaluation.repository.PresenceRepository;
 import com.kfokam48.evaluation.repository.SessionRepository;
@@ -43,46 +44,45 @@ public class PresenceService {
 
     public PresenceResponse marquer(MarquerPresenceRequest request) {
         tentativeTracker.verifierNonBloque(request.etudiantId());
-
         Session session = sessionRepository.findByCode(request.code())
                 .orElseGet(() -> {
                     tentativeTracker.enregistrerEchec(request.etudiantId());
                     throw new CodeInconnuException();
                 });
-
         if (session.getExpirationAt().isBefore(LocalDateTime.now())) {
             tentativeTracker.reinitialiser(request.etudiantId());
             throw new CodeExpireException();
         }
-
         if (session.isCloturee()) {
             throw new SessionClotureeException();
         }
-
         Etudiant etudiant = etudiantRepository.findById(request.etudiantId())
                 .orElseThrow(() -> new RessourceInconnueException("Étudiant inconnu."));
-
         if (presenceRepository.existsBySessionIdAndEtudiantId(session.getId(), etudiant.getId())) {
             throw new DejaPresentException();
         }
-
         Presence presence = Presence.builder()
-                .session(session)
-                .etudiant(etudiant)
-                .source(SourcePresence.ETUDIANT)
-                .createdAt(LocalDateTime.now())
-                .build();
-
+                .session(session).etudiant(etudiant)
+                .source(SourcePresence.ETUDIANT).createdAt(LocalDateTime.now()).build();
         Presence saved = presenceRepository.save(presence);
         tentativeTracker.reinitialiser(etudiant.getId());
-
         assignationRelecteurService.tenterAssignationsEnAttente(session.getId());
+        return new PresenceResponse(saved.getId(), session.getId(), etudiant.getId(), saved.getSource().name());
+    }
 
-        return new PresenceResponse(
-                saved.getId(),
-                session.getId(),
-                etudiant.getId(),
-                saved.getSource().name()
-        );
+    public PresenceResponse ajouterParFormateur(Long sessionId, Long etudiantId) {
+        Session session = sessionRepository.findById(sessionId)
+                .orElseThrow(SessionInconnueException::new);
+        Etudiant etudiant = etudiantRepository.findById(etudiantId)
+                .orElseThrow(() -> new RessourceInconnueException("Étudiant inconnu."));
+        if (presenceRepository.existsBySessionIdAndEtudiantId(sessionId, etudiantId)) {
+            throw new DejaPresentException();
+        }
+        Presence presence = Presence.builder()
+                .session(session).etudiant(etudiant)
+                .source(SourcePresence.FORMATEUR).createdAt(LocalDateTime.now()).build();
+        Presence saved = presenceRepository.save(presence);
+        assignationRelecteurService.tenterAssignationsEnAttente(sessionId);
+        return new PresenceResponse(saved.getId(), sessionId, etudiantId, saved.getSource().name());
     }
 }
