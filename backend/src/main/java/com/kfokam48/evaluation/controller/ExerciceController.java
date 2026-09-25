@@ -2,6 +2,7 @@ package com.kfokam48.evaluation.controller;
 
 import com.kfokam48.evaluation.dto.request.DeposerExerciceRequest;
 import com.kfokam48.evaluation.dto.response.ExerciceResponse;
+import com.kfokam48.evaluation.dto.response.RelecturePubliqueResponse;
 import com.kfokam48.evaluation.service.ExerciceService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -20,7 +21,11 @@ public class ExerciceController {
 
     @PostMapping
     public ResponseEntity<ExerciceResponse> deposer(@Valid @RequestBody DeposerExerciceRequest request) {
-        ExerciceResponse response = exerciceService.deposer(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(exerciceService.deposer(request));
+    }
+
+    @GetMapping("/{id}/relecture")
+    public ResponseEntity<RelecturePubliqueResponse> consulterRelecture(@PathVariable Long id) {
+        return ResponseEntity.ok(exerciceService.consulterRelecture(id));
     }
 }
